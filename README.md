@@ -98,8 +98,9 @@ This "Bolita" version is built on ESPHome, offering a robust and flexible altern
 - This version transforms the Xiaozhi Ball V2 into a high-reactivity glucose sentinel. No more 5-minute delays—your Night Star now responds with the speed of an AI assistant.
 - 🌟 **What's New:**
 - Instant Slider Feedback: Limits now sync with the display in under 1 second. No more waiting for the Dexcom refresh to see your new alert zones.
-- The **"Night Star Ray"** (Furious Light): Internal LED alerts that turn the ball into a pulsing beacon.
-                                  <img src=".assets/Furious.jpg" width="220" alt="Bolita Furiosa">
+- The **"Night Star Ray:**(Furious Light):
+   <p align="center"> <img src=".assets/Furious.jpg" width="220" alt="Bolita Furiosa">
+  Internal LED alerts, turn the ball into a pulsing beacon until you touch the screen.
 - 🔴 **Fast Red Pulse:** Critical Danger (Low/Max).
 - 🟡 **Slow Yellow Pulse:** High Warning.
 - **Touch-to-Snooze:** Tap the screen to instantly kill the "fury." The light stays off until your glucose returns to a safe range (Auto-Reset).
