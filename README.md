@@ -135,6 +135,7 @@ This "Bolita" version is built on ESPHome, offering a robust and flexible altern
 
 1. **Assets:** Place the `assets_round/` folder in your local ESPHome directory.
 2. **Secrets:** Open your `secrets.yaml` and fill in your credentials exactly like this:
+3. **Execute** https://web.esphome.io/
 
 ```yaml
 # secrets.yaml
