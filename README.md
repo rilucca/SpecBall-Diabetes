@@ -65,7 +65,7 @@ The visual ring logic initially, is currently set as follows:
 This "Bolita" version is built on ESPHome, offering a robust and flexible alternative to commercial monitors.
 
 ### 📊 Glucose Monitoring
-- **Real-Time Display:** Simple and clear glucose value with trend arrows (Steady, Rising, Falling).
+- **Real-Time Display:** Simple and clear glucose value with trend arrows (Steady, Rising, Falling, Fast Rising, Fast Falling, FFast Rising, FFast Falling).
 - **Dynamic Color Logic:** The screen ring changes color automatically based on thresholds (Red < 4.0, Yellow > 10.0, Double Red/Yellow > 14.0 mmol/L).
 - **Official Integration:** Powered by the [Home Assistant Dexcom Integration](https://www.home-assistant.io).
 - **Smart Refresh:** Data is pulled from the Dexcom Cloud, ensuring your Bolita stays synced with your transmitter.
