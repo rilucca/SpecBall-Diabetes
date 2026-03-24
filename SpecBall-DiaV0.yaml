@@ -1,6 +1,6 @@
 substitutions:
-  name: esphome-web-0bac48
-  friendly_name: "Xiaozhi Ball V2"
+  name: SpecBallDiabetes
+  friendly_name: "SpecBallDiaV0"
 
 ## v1.07 26-jul-2025 #############################################################################################################################
 ## changed how to play startup sound to avoid double triggering
