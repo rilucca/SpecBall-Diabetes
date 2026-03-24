@@ -1,6 +1,7 @@
 # 🩸 SpecBall-Diabetes (Beta)
 
-Este proyecto transforma la **SpecBall S2 (ESP32-S3)** en un monitor dedicado de glucosa en tiempo real. 
+Este proyecto transforma la **SpecBall S2 (ESP32-S3)** en un monitor dedicado de glucosa en tiempo real. Este va a ser sin Home Assistant
+
 Basado en el hardware de **Xiaozhi/RealDeco**, pero optimizado exclusivamente para **T1D (Diabetes Tipo 1)**.
 
 ### 🚀 Funcionalidades (En desarrollo)
@@ -17,4 +18,3 @@ Basado en el hardware de **Xiaozhi/RealDeco**, pero optimizado exclusivamente pa
 - `xiaozhi.yaml`: Configuración de hardware (Speaker, Display, LED).
 - `nightscout.h`: Lógica de conexión y parsing de datos CGM.
 
-# ota_password: "YOUR_OTA_PASSWORD_HERE"
