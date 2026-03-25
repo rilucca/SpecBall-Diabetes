@@ -1,33 +1,17 @@
 substitutions:
-  name: SpecBallDiabetes
+  name: specballdiabetes
   friendly_name: "SpecBallDiaV0"
 
-## v1.07 26-jul-2025 #############################################################################################################################
-## changed how to play startup sound to avoid double triggering
-## v1.06 19-jul-2025 #############################################################################################################################
-## Added: Startup sound when connected to HA, optional with switch, and option to select other sounds in settings below.
-## Added: Mute and Playing icon to all emos.
-## v1.05 18-jul-2025 #############################################################################################################################
-## Fixes: minor bugfixes, sound level to max, show muted mic when playing music or playing TTS, not when playing internal sounds.
-## v1.04 13-jul-2025 #############################################################################################################################
-## Added: optional wake sound, delays the time before listening, so optional switch in HA.
-## Moved: show_text and show_battery_status to switches in HA.
-## v1.03 08-jul-2025 #############################################################################################################################
-## Added: optional show text boxes
-## v1.02 30-jun-2025 #############################################################################################################################
-## Added optional Battery Status
-
-## SETTINGS ######################################################################################################################################
-
-  imagemodel: "HA-character" # (options are: Alfred,Astrobot,Buzz,Casita,Cybergirl,Dory,EVE,Eyes,Eyes2,GLaDOS,Girl1,Guy1,Guy2,Gwen,HA-character,Harley,Jarvis,Luffy,Mario,Max,Prime,Robochibi,Robocop,Robot,Robotgirl,Shaun)
-  startup_sound: "Home_Connected" # (options are: available,Home_Connected,Computer_Ready)
-
-  imagewidth: "240" # GC9A01A (Ball v2 & Muma & Puck) "240"
-  imageheight: "240" # GC9A01A (Ball v2 & Muma & Puck) "240"
-  displaymodel: "GC9A01A" # GC9A01A (Ball v2 & Puck) or ST7789V (Muma)
-  invertcolors: "true" # GC9A01A/ST7789V (Ball v2 & Muma & Puck) "true"
-
-##################################################################################################################################################
+  # Display settings for SpecBall S2 (Round Screen)
+  imagewidth: "240" 
+  imageheight: "240"
+  displaymodel: "GC9A01A"
+  invertcolors: "true"
+  
+ # Simplified for Diabetes (0-9, units, and arrows)
+  allowed_characters: "0123456789.,↑↓→↗↘ -:!%?ABCDEFGHIJKLMNÑOPQRSTUVWXYZabcdefghijklmnñopqrstuvwxyzáéíóúü"
+  font_glyphsets: "GF_Latin_Core"
+  font_family: "Figtree"
 
   # Hardware v2 pin mappings
   sda_pin_bus_a: "15"        # I2C Bus A SDA
@@ -56,62 +40,86 @@ substitutions:
   led_pin: "48"              # RGB LED (WS2812)
   battery_adc_pin: "1"       # Battery Voltage ADC
 
-##################################################################################################################################################
+spi:
+  id: spi_bus
+  clk_pin: GPIO${spi_clk_pin}
+  mosi_pin: GPIO${spi_mosi_pin}
 
-  loading_illustration_file: "loading.png"
-  idle_illustration_file: "idle.png"
-  listening_illustration_file: "listening.png"
-  thinking_illustration_file: "thinking.png"
-  replying_illustration_file: "replying.png"
-  error_illustration_file: "error.png"
-  timer_finished_illustration_file: "timer_finished.png"
-  mute_illustration_file: "mute.png"
-  
-  startup_sound_file: "startup.flac"
+i2c:
+  - id: bus_a
+    sda: GPIO${sda_pin_bus_a}
+    scl: GPIO${scl_pin_bus_a}
+    scan: true
+  - id: bus_b
+    sda: GPIO${sda_pin_bus_b}
+    scl: GPIO${scl_pin_bus_b}
+    scan: true
 
-  # Pull the Dexcom user and values alarm settings from secrets.yaml
-  user_name: !secret dexcom_username
-  glucose_low: !secret glucose_min_red
-  glucose_high: !secret glucose_pre_high_yellow
-  glucose_max: !secret glucose_max_alarm
-  
-  # Build the full entity IDs automatically
-  glucose_value_entity: "sensor.${user_name}_glucose_value"
-  glucose_trend_entity: "sensor.${user_name}_glucose_trend"
+i2s_audio:
+  - id: i2s_audio_bus  # <--- Asegúrate de que este ID sea exactamente así
+    i2s_lrclk_pin: GPIO${i2s_lrclk_pin}
+    i2s_bclk_pin: GPIO${i2s_bclk_pin}
 
-  loading_illustration_background_color: "000000"
-  idle_illustration_background_color: "000000"
-  listening_illustration_background_color: "000000"
-  thinking_illustration_background_color: "000000"
-  replying_illustration_background_color: "000000"
-  error_illustration_background_color: "000000"
 
-  voice_assist_idle_phase_id: "1"
-  voice_assist_listening_phase_id: "2"
-  voice_assist_thinking_phase_id: "3"
-  voice_assist_replying_phase_id: "4"
-  voice_assist_not_ready_phase_id: "10"
-  voice_assist_error_phase_id: "11"
-  voice_assist_muted_phase_id: "12"
-  voice_assist_timer_finished_phase_id: "20"
+# 1. El DAC ES8311 (Se conecta vía I2C)
+audio_dac:
+  - platform: es8311
+    id: es8311_dac
+    i2c_id: bus_a 
+    address: 0x18 # Dirección estándar del ES8311
+    bits_per_sample: 16bit
+    sample_rate: 16000
 
-  allowed_characters: " !#%'()+,-./0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWYZ[]_abcdefghijklmnopqrstuvwxyz{|}°²³µ¿ÁÂÄÅÉÖÚßàáâãäåæçèéêëìíîðñòóôõöøùúûüýþāăąćčďĐđēėęěğĮįıļľŁłńňőřśšťũūůűųźŻżŽžơưșțΆΈΌΐΑΒΓΔΕΖΗΘΚΜΝΠΡΣΤΥΦάέήίαβγδεζηθικλμνξοπρςστυφχψωϊόύώАБВГДЕЖЗИКЛМНОПРСТУХЦЧШЪЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёђєіїјљњћאבגדהוזחטיכלםמןנסעפץצקרשת،ءآأإئابةتجحخدذرزسشصضطظعغفقكلمنهوىيٹپچڈکگںھہیےংকচতধনফবযরলশষস়ািু্చయలిెొ్ംഅആഇഈഉഎഓകഗങചജഞടഡണതദധനപഫബഭമയരറലളവശസഹാിീുൂെേൈ്ൺൻർൽൾაბგდევზთილმნოპრსტუფქყშჩცძჭხạảấầẩậắặẹẽếềểệỉịọỏốồổỗộớờởợụủứừửữựỳ—、一上不个中为主乾了些亮人任低佔何作供依侧係個側偵充光入全关冇冷几切到制前動區卧厅厨及口另右吊后吗启吸呀咗哪唔問啟嗎嘅嘛器圍在场執場外多大始安定客室家密寵对將小少左已帘常幫幾库度庫廊廚廳开式後恆感態成我戲戶户房所扇手打执把拔换掉控插摄整斯新明是景暗更最會有未本模機檯櫃欄次正氏水沒没洗活派温測源溫漏潮激濕灯為無煙照熱燈燥物狀玄现現瓦用發的盞目着睡私空窗立笛管節簾籬紅線红罐置聚聲脚腦腳臥色节著行衣解設調請謝警设调走路車车运連遊運過道邊部都量鎖锁門閂閉開關门闭除隱離電震霧面音頂題顏颜風风食餅餵가간감갔강개거게겨결경고공과관그금급기길깥꺼껐꼽나난내네놀누는능니다닫담대더데도동됐되된됨둡드든등디때떤뜨라래러렇렌려로료른를리림링마많명몇모무문물뭐바밝방배변보부불블빨뽑사산상색서설성세센션소쇼수스습시신실싱아안않알았애야어얼업없었에여연열옆오온완외왼요운움워원위으은을음의이인일임입있작잠장재전절정제져조족종주줄중줘지직진짐쪽차창천최추출충치침커컴켜켰쿠크키탁탄태탬터텔통트튼티파팬퍼폰표퓨플핑한함해했행혀현화활후휴힘，？"
+# 2. El Micrófono (Si quieres dejarlo listo, aunque no lo usemos para diabetes)
+microphone:
+  - platform: i2s_audio
+    id: i2s_mics
+    i2s_audio_id: i2s_audio_bus
+    i2s_din_pin: GPIO${i2s_din_pin}
+    adc_type: external
+    bits_per_sample: 16bit
+    pdm: false
 
-  font_glyphsets: "GF_Latin_Core"
-  font_family: Figtree
+# 3. El Altavoz (El que dará las alertas de glucosa)
+speaker:
+  - platform: i2s_audio
+    id: i2s_audio_speaker
+    i2s_audio_id: i2s_audio_bus
+    i2s_dout_pin: GPIO${i2s_dout_pin}
+    dac_type: external
+    audio_dac: es8311_dac # <--- Esto lo vincula con el bloque de arriba
+    i2s_mode: primary
+
+    
+# 4. Backlight Control
+output:
+  - platform: ledc
+    pin: GPIO${backlight_output_pin}
+    id: backlight_output
+    inverted: true
 
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+  includes:
+    - nightscout.h
   min_version: 2025.5.0
   name_add_mac_suffix: false
   on_boot:
     priority: 600
     then:
+      # 1. Registramos el código de Nightscout para que empiece a funcionar
+      - lambda: 'App.register_component(NightscoutComponent::instance());'
+      
+      # 2. Refrescamos la pantalla y la batería
       - script.execute: draw_display
       - component.update: battery_voltage
       - component.update: battery_percentage
-      - delay: 30s
+      
+      # 3. Esperamos a que el WiFi conecte y baje la primera glucosa
+      - delay: 15s # Bajamos de 30s a 15s para que sea más rápido
+      
+      # 4. Quitamos el logo de inicio y mostramos la glucosa real
       - if:
           condition:
             lambda: return id(init_in_progress);
@@ -139,13 +147,6 @@ api:
     key: !secret api_encryption_key
   on_client_connected:
     - script.execute: draw_display
-    - lambda: |-
-        if (!id(boot_sound_played)) {
-          id(boot_sound_played) = true;
-          if (id(startup_sound_switch).state) {
-            id(play_sound)->execute(true, id(ready_sound));
-          }
-        }
   on_client_disconnected:
     - script.execute: draw_display
 
@@ -177,75 +178,63 @@ button:
   - platform: factory_reset
     id: factory_reset_btn
     internal: true
+  - platform: restart
+    name: "Restart SpecBall"
+    id: restart_button # Now it's a true button
 
 sensor:
+  # Sensor de Glucosa (SGV)
+  - platform: template
+    name: "Glucose mg-dL"
+    id: sgv_val
+    unit_of_measurement: "mg-dL"
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: 'return NightscoutComponent::instance()->sgv_sensor->state;'
+
+  # Hardware Battery Sensor
   - platform: adc
     pin: GPIO${battery_adc_pin}
     name: "Battery Voltage"
     id: battery_voltage
     attenuation: 12db
-    accuracy_decimals: 2
-    update_interval: 1s
-    unit_of_measurement: "V"
-    icon: mdi:battery-medium
+    update_interval: 1min # Save power, 1s is too fast
     filters:
       - multiply: 2.0
       - median:
-          window_size: 7
-          send_every: 7
-          send_first_at: 7
-      - throttle: 1min
-    on_value:
-      then:
-        - component.update: battery_percentage
-      
+          window_size: 5
+
+  # Otros datos de Nightscout
+  - platform: template
+    name: "IOB"
+    id: iob_val
+    unit_of_measurement: "U"
+    accuracy_decimals: 2
+    update_interval: 60s
+    lambda: 'return NightscoutComponent::instance()->iob_sensor->state;'
+
+  - platform: template
+    name: "COB"
+    id: cob_val
+    unit_of_measurement: "g"
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: 'return NightscoutComponent::instance()->cob_sensor->state;'
+
+  # Battery Percentage Calculation
   - platform: template
     id: battery_percentage
     name: "Battery Percentage"
-    lambda: return id(battery_voltage).state;
-    accuracy_decimals: 0
     unit_of_measurement: "%"
-    icon: mdi:battery-medium
-    filters:
-      - calibrate_linear:
-         method: exact
-         datapoints:
-          - 2.80 -> 0.0
-          - 3.10 -> 10.0
-          - 3.30 -> 20.0
-          - 3.45 -> 30.0
-          - 3.60 -> 40.0
-          - 3.70 -> 50.0
-          - 3.75 -> 60.0
-          - 3.80 -> 70.0
-          - 3.90 -> 80.0
-          - 4.00 -> 90.0
-          - 4.20 -> 100.0
-      - lambda: |-
-          if (x > 100) return 100;
-          if (x < 0) return 0;
-          return x;
+    lambda: |-
+      float v = id(battery_voltage).state;
+      if (v >= 4.2) return 100.0;
+      if (v <= 3.2) return 0.0;
+      return (v - 3.2) * 100.0; // Simple linear math for now
     on_value:
       then:
-        - lambda: |-
-            int current = (int)x;
-            if (current != id(last_battery_percent)) {
-              id(last_battery_percent) = current;
-              id(draw_display).execute();
-            }
-
-  - platform: homeassistant
-    id: glucose_value
-    entity_id: ${glucose_value_entity}
-    internal: true
-    on_value:
-      then:
-        - lambda: |-
-            // If the Assistant isn't actively listening or speaking, 
-            // we force the screen to refresh the new Dexcom value.
-            if (!id(va).is_running()) {
-              id(s3_box_lcd).update();
-            }
+        - lambda: 'id(last_battery_percent) = (int)x;'
+        - component.update: s3_box_lcd # Refreshes screen with new bat %
 
 touchscreen:
   - platform: cst816
@@ -257,7 +246,7 @@ touchscreen:
       then:
         # 1. NEW: Mute the Alarm and Turn off the Light Star
         - lambda: 'id(alarm_muted) = true;'
-        - light.turn_off: led
+        - light.turn_off: led_rgb
         # 2. Existing functionality:
         - binary_sensor.template.publish:
             id: touch_input
@@ -267,300 +256,75 @@ touchscreen:
         - binary_sensor.template.publish:
             id: touch_input
             state: OFF
-
 binary_sensor:
   - platform: template
     name: "Touch Button"
     id: touch_input
     on_multi_click:
-      # Single tap
+      # Un toque corto: Silenciar alarma y refrescar datos
       - timing:
           - ON for 40ms to 400ms
           - OFF for at least 330ms
         then:
-          - if:
-              condition:
-                switch.is_on: timer_ringing
-              then:
-                - switch.turn_off: timer_ringing
-              else:
-                - if:
-                    condition:
-                      lambda: return id(wake_word_engine_location).state == "On device";
-                    then:
-                      - if:
-                          condition:
-                            not:
-                              voice_assistant.is_running:
-                          then:
-                            - voice_assistant.start:
-                          else:
-                            - voice_assistant.stop:  
-
+          - logger.log: "Botón presionado: Silenciando y Refrescando..."
+          # CAMBIO CLAVE: Quitamos id(ns_logic) y usamos la instancia directa
+          - lambda: |-
+              if (NightscoutComponent::instance()->sgv_sensor->state > 200) {
+                ESP_LOGD("Touch", "Glucosa alta detectada al presionar");
+              }
+          - light.turn_off: led_rgb         # Apagamos el LED de alerta
+          - component.update: s3_box_lcd    # Refrescamos la pantalla
+      
+      # Un toque largo: Reiniciar el dispositivo
       - timing:
-          - ON for at least 1s
+          - ON for at least 2s
         then:
-          - switch.toggle: show_battery_status
-          - script.execute: draw_display
+          - logger.log: "Reinicio solicitado por toque largo"
+          - button.press: restart_button
 
-  - platform: gpio
-    pin:
-      number: GPIO${left_top_button_pin}
-      mode: INPUT_PULLUP
-      ignore_strapping_warning: true
-      inverted: true
-    id: left_top_button
-    internal: true
-    on_multi_click:
-      - timing:
-          - ON for at least 50ms
-          - OFF for at least 50ms
-        then:
-          - if:
-              condition:
-                switch.is_on: timer_ringing
-              then:
-                - switch.turn_off: timer_ringing
-              else:
-                - if:
-                    condition:
-                      lambda: return id(wake_word_engine_location).state == "On device";
-                    then:
-                      - if:
-                          condition:
-                            not:
-                              voice_assistant.is_running:
-                          then:
-                            - voice_assistant.start:                     
-                          else:
-                            - voice_assistant.stop:  
-      - timing:
-          - ON for at least 10s
-        then:
-          - button.press: factory_reset_btn
-
-output:
-  - platform: ledc
-    pin: GPIO${backlight_output_pin}
-    id: backlight_output
-    inverted: true 
 
 light:
+  # 1. El BACKLIGHT (Lo que ilumina los números)
   - platform: monochromatic
-    id: Sled
-    name: Screen
-    icon: "mdi:television"
-    entity_category: config
+    id: s3_box_lcd_backlight # Un ID único para la pantalla
+    name: "Screen Backlight"
     output: backlight_output
     restore_mode: ALWAYS_ON
-    default_transition_length: 250ms
+
+  # 2. El LIGHT STAR (El LED RGB que ilumina la carcasa)
   - platform: esp32_rmt_led_strip
-    id: led
-    name: "Light Star"
-    disabled_by_default: false
-    entity_category: config
+    id: led_rgb 
+    name: "LED Carcasa"
     pin: GPIO${led_pin}
-    default_transition_length: 0s
     chipset: WS2812
     num_leds: 1
     rgb_order: grb
     effects:
       - pulse:
           name: "Slow Pulse"
-          transition_length: 250ms
-          update_interval: 250ms
-          min_brightness: 50%
-          max_brightness: 100%
       - pulse:
           name: "Fast Pulse"
-          transition_length: 100ms
-          update_interval: 100ms
-          min_brightness: 50%
-          max_brightness: 100%
 
-i2c:
-  - id: bus_a
-    sda: GPIO${sda_pin_bus_a}
-    scl: GPIO${scl_pin_bus_a}
-    scan: true
-  - id: bus_b
-    sda: GPIO${sda_pin_bus_b}
-    scl: GPIO${scl_pin_bus_b}
-    scan: true
 
-i2s_audio:
-  - id: i2s_audio_bus
-    i2s_lrclk_pin: GPIO${i2s_lrclk_pin}
-    i2s_bclk_pin: GPIO${i2s_bclk_pin}
-    i2s_mclk_pin: GPIO${i2s_mclk_pin}
-
-audio_dac:
-  - platform: es8311
-    i2c_id: bus_a 
-    id: es8311_dac
-    bits_per_sample: 16bit
-    sample_rate: 16000
-
-microphone:
-  - platform: i2s_audio
-    id: i2s_mics
-    sample_rate: 16000
-    i2s_din_pin: GPIO${i2s_din_pin}
-    bits_per_sample: 16bit
-    adc_type: external
-    channel: left
-
-speaker:
-  - platform: i2s_audio
-    id: i2s_audio_speaker
-    i2s_dout_pin: GPIO${i2s_dout_pin}
-    dac_type: external
-    sample_rate: 16000
-    bits_per_sample: 16bit
-    channel: left
-    audio_dac: es8311_dac
-    buffer_duration: 50ms
 
 media_player:
   - platform: speaker
-    name: None
-    id: external_media_player
+    name: "SpecBall Speaker"
+    id: glucose_speaker
     announcement_pipeline:
-      speaker: i2s_audio_speaker
+      speaker: i2s_audio_speaker # This points to the ID in your 'speaker:' section
       format: FLAC
-      sample_rate: 16000
-      num_channels: 1  # S3 Box only has one output channel
-    files:
-      - id: timer_finished_sound
-        file: "assets_round/timer_finished.flac"
-      - id: wake_word_triggered_sound
-        file: "assets_round/wake_word_triggered.flac"
-      - id: ready_sound
-        file: "assets_round/timer_finished.flac"
-    on_announcement:
-      - if:
-          condition:
-            - microphone.is_capturing:
-          then:
-            - script.execute: stop_wake_word
-            - if:
-                condition:
-                  - lambda: return id(wake_word_engine_location).state == "In Home Assistant";
-                then:
-                  - wait_until:
-                      - not:
-                          voice_assistant.is_running:
-      - if:
-          condition:
-            not:
-              voice_assistant.is_running:
-          then:
-            - if:
-                condition:
-                  lambda: 'return id(playing_internal_sound);'
-                then:
-                  - lambda: 'id(playing_internal_sound) = false;'
-                else:
-                  - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
-                  - script.execute: draw_display
-    on_idle:
-      - if:
-          condition:
-            not:
-              voice_assistant.is_running:
-          then:
-            - script.execute: start_wake_word
-            - script.execute: set_idle_or_mute_phase
-            - script.execute: draw_display
+#    files:
+#      - id: alert_low
+#        file: "assets/alert_low.flac"
+#      - id: alert_high
+#        file: "assets/alert_high.flac"
 
-micro_wake_word:
-  id: mww
-  # We moved the cutoff inside the models list below
-  models:
-    - model: okay_nabu
-      probability_cutoff: 0.4
-      sliding_window_size: 15
-    - model: hey_jarvis
-    - model: alexa
-  on_wake_word_detected:
-    - if:
-        condition:
-          switch.is_on: wake_sound
-        then:
-          - script.execute:
-              id: play_sound
-              priority: true
-              sound_file: !lambda return id(wake_word_triggered_sound);
-          - delay: 300ms
-    - voice_assistant.start:
-        wake_word: !lambda return wake_word;
 
-voice_assistant:
-  id: va
-  microphone: i2s_mics
-  media_player: external_media_player
-  micro_wake_word: mww
-  noise_suppression_level: 2
-  auto_gain: 31dBFS
-  volume_multiplier: 3.0
-  on_listening:
-    - delay: 100ms # Give a moment to breathe
-    - lambda: |-
-        id(voice_assistant_phase) = ${voice_assist_listening_phase_id};
-        id(text_request).publish_state("...");
-        id(text_response).publish_state("...");
-    - script.execute: draw_display
-  on_stt_vad_end:
-    - lambda: id(voice_assistant_phase) = ${voice_assist_thinking_phase_id};
-    - script.execute: draw_display
-  on_stt_end:
-    - lambda: id(text_request).publish_state(x);
-    - script.execute: draw_display
-  on_tts_start:
-    - lambda: |-
-        id(text_response).publish_state(x);
-        id(voice_assistant_phase) = ${voice_assist_replying_phase_id};
-    - script.execute: draw_display
-  on_end:
-    - wait_until:
-        condition:
-          - media_player.is_announcing:
-        timeout: 0.5s
-    - wait_until:
-        - and:
-            - not:
-                media_player.is_announcing:
-            - not:
-                speaker.is_playing:
-    - if:
-        condition:
-          - lambda: return id(wake_word_engine_location).state == "On device";
-        then:
-          - lambda: id(va).set_use_wake_word(false);
-          - micro_wake_word.start:
-    - script.execute: set_idle_or_mute_phase
-    - script.execute: draw_display
-    - lambda: |-
-        id(text_request).publish_state("");
-        id(text_response).publish_state("");
-  on_error:
-    - if:
-        condition:
-          lambda: return !id(init_in_progress);
-        then:
-          - lambda: id(voice_assistant_phase) = ${voice_assist_error_phase_id};
-          - script.execute: draw_display
-          - delay: 1s
-          - if:
-              condition:
-                switch.is_off: mute
-              then:
-                - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
-              else:
-                - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
-          - script.execute: draw_display
+
 
 script:
+  # Este script redibujará la pantalla cada vez que cambie la glucosa
   - id: draw_display
     then:
       - if:
@@ -571,47 +335,9 @@ script:
                 condition:
                   wifi.connected:
                 then:
-                  - if:
-                      condition:
-                        api.connected:
-                      then:
-                        - lambda: |
-                            switch(id(voice_assistant_phase)) {
-                              case ${voice_assist_listening_phase_id}:
-                                id(s3_box_lcd).show_page(listening_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_thinking_phase_id}:
-                                id(s3_box_lcd).show_page(thinking_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_replying_phase_id}:
-                                id(s3_box_lcd).show_page(replying_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_error_phase_id}:
-                                id(s3_box_lcd).show_page(error_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_muted_phase_id}:
-                                id(s3_box_lcd).show_page(muted_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_not_ready_phase_id}:
-                                id(s3_box_lcd).show_page(no_ha_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              case ${voice_assist_timer_finished_phase_id}:
-                                id(s3_box_lcd).show_page(timer_finished_page);
-                                id(s3_box_lcd).update();
-                                break;
-                              default:
-                                id(s3_box_lcd).show_page(idle_page);
-                                id(s3_box_lcd).update();
-                            }
-                      else:
-                        - display.page.show: no_ha_page
-                        - component.update: s3_box_lcd
+                  # Aquí mostramos la página principal de Glucosa
+                  - display.page.show: idle_page 
+                  - component.update: s3_box_lcd
                 else:
                   - display.page.show: no_wifi_page
                   - component.update: s3_box_lcd
@@ -619,239 +345,53 @@ script:
             - display.page.show: initializing_page
             - component.update: s3_box_lcd
 
-  - id: fetch_first_active_timer
-    then:
-      - lambda: |
-          const auto timers = id(va).get_timers();
-          auto output_timer = timers.begin()->second;
-          for (auto &iterable_timer : timers) {
-            if (iterable_timer.second.is_active && iterable_timer.second.seconds_left <= output_timer.seconds_left) {
-              output_timer = iterable_timer.second;
-            }
-          }
-          id(global_first_active_timer) = output_timer;
-  - id: check_if_timers_active
-    then:
-      - lambda: |
-          const auto timers = id(va).get_timers();
-          bool output = false;
-          if (timers.size() > 0) {
-            for (auto &iterable_timer : timers) {
-              if(iterable_timer.second.is_active) {
-                output = true;
-              }
-            }
-          }
-          id(global_is_timer_active) = output;
-  - id: fetch_first_timer
-    then:
-      - lambda: |
-          const auto timers = id(va).get_timers();
-          auto output_timer = timers.begin()->second;
-          for (auto &iterable_timer : timers) {
-            if (iterable_timer.second.seconds_left <= output_timer.seconds_left) {
-              output_timer = iterable_timer.second;
-            }
-          }
-          id(global_first_timer) = output_timer;
-  - id: check_if_timers
-    then:
-      - lambda: |
-          const auto timers = id(va).get_timers();
-          bool output = false;
-          if (timers.size() > 0) {
-            output = true;
-          }
-          id(global_is_timer) = output;
-
-  - id: draw_timer_timeline
-    then:
-      - lambda: |
-          id(check_if_timers_active).execute();
-          id(check_if_timers).execute();
-          if (id(global_is_timer_active)){
-            id(fetch_first_active_timer).execute();
-            int active_pixels = round( 320 * id(global_first_active_timer).seconds_left / max(id(global_first_active_timer).total_seconds , static_cast<uint32_t>(1)) );
-            if (active_pixels > 0){
-              id(s3_box_lcd).filled_rectangle(0 , 225 , 240 , 15 , Color::WHITE );
-              id(s3_box_lcd).filled_rectangle(0 , 226 , active_pixels , 13 , id(active_timer_color) );
-            }
-          } else if (id(global_is_timer)){
-            id(fetch_first_timer).execute();
-            int active_pixels = round( 320 * id(global_first_timer).seconds_left / max(id(global_first_timer).total_seconds , static_cast<uint32_t>(1)));
-            if (active_pixels > 0){
-              id(s3_box_lcd).filled_rectangle(0 , 225 , 240 , 15 , Color::WHITE );
-              id(s3_box_lcd).filled_rectangle(0 , 226 , active_pixels , 13 , id(paused_timer_color) );
-            }
-          }
-  - id: draw_active_timer_widget
-    then:
-      - lambda: |
-          id(check_if_timers_active).execute();
-          if (id(global_is_timer_active)){
-            id(s3_box_lcd).filled_rectangle(80 , 40 , 160 , 50 , Color::WHITE );
-            id(s3_box_lcd).rectangle(80 , 40 , 160 , 50 , Color::BLACK );
-
-            id(fetch_first_active_timer).execute();
-            int hours_left = floor(id(global_first_active_timer).seconds_left / 3600);
-            int minutes_left = floor((id(global_first_active_timer).seconds_left - hours_left * 3600) / 60);
-            int seconds_left = id(global_first_active_timer).seconds_left - hours_left * 3600 - minutes_left * 60 ;
-            auto display_hours = (hours_left < 10 ? "0" : "") + std::to_string(hours_left);
-            auto display_minute = (minutes_left < 10 ? "0" : "") + std::to_string(minutes_left);
-            auto display_seconds = (seconds_left  < 10 ? "0" : "") + std::to_string(seconds_left) ;
-
-            std::string display_string = "";
-            if (hours_left > 0) {
-              display_string = display_hours + ":" + display_minute;
-            } else {
-              display_string = display_minute + ":" + display_seconds;
-            }
-            id(s3_box_lcd).printf(120, 47, id(font_timer), Color::BLACK, "%s", display_string.c_str());
-          }
-  - id: start_wake_word
-    then:
-      - if:
-          condition:
-            and:
-              - not:
-                  - voice_assistant.is_running:
-              - lambda: return id(wake_word_engine_location).state == "On device";
-          then:
-            - lambda: id(va).set_use_wake_word(false);
-            - micro_wake_word.start:
-      - if:
-          condition:
-            and:
-              - not:
-                  - voice_assistant.is_running:
-              - lambda: return id(wake_word_engine_location).state == "In Home Assistant";
-          then:
-            - lambda: id(va).set_use_wake_word(true);
-            - voice_assistant.start_continuous:
-  - id: stop_wake_word
-    then:
-      - if:
-          condition:
-            lambda: return id(wake_word_engine_location).state == "In Home Assistant";
-          then:
-            - lambda: id(va).set_use_wake_word(false);
-            - voice_assistant.stop:
-      - if:
-          condition:
-            lambda: return id(wake_word_engine_location).state == "On device";
-          then:
-            - micro_wake_word.stop:
-  - id: set_idle_or_mute_phase
-    then:
-      - if:
-          condition:
-            switch.is_off: mute
-          then:
-            - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
-          else:
-            - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
-
-  # Script executed when we want to play sounds on the device.
-  - id: play_sound
+  # Script para sonar la alarma de glucosa
+  - id: play_glucose_alert
     parameters:
-      priority: bool
-      sound_file: "audio::AudioFile*"
+      alert_type: string
     then:
-      - lambda: |-
-          id(playing_internal_sound) = true;
-          if (priority) {
-            id(external_media_player)
-              ->make_call()
-              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_STOP)
-              .set_announcement(true)
-              .perform();
-          }
-          if ( (id(external_media_player).state != media_player::MediaPlayerState::MEDIA_PLAYER_STATE_ANNOUNCING ) || priority) {
-            id(external_media_player)
-              ->play_file(sound_file, true, false);
-          }
+      - if:
+          condition:
+            switch.is_off: mute_alarms
+          then:
+            - logger.log: "Sonando Alerta de Glucosa"
+            # Aquí añadiremos la lógica para reproducir el archivo según alert_type
 
 switch:
+  # FISICO: Mantiene el amplificador del altavoz encendido
+  - platform: gpio
+    name: "Speaker Hardware Enable"
+    id: speaker_enable
+    pin: GPIO${speaker_enable_pin}
+    restore_mode: ALWAYS_ON
+    entity_category: config
+
+  # LOGICO: Para silenciar las alarmas de glucosa desde el móvil
   - platform: template
-    name: Mute
-    id: mute
-    icon: "mdi:microphone-off"
+    name: "Mute Glucose Alarms"
+    id: mute_alarms
+    icon: "mdi:volume-off"
     optimistic: true
     restore_mode: RESTORE_DEFAULT_OFF
     entity_category: config
-    on_turn_off:
-      - microphone.unmute:
-      - lambda: id(voice_assistant_phase) = ${voice_assist_idle_phase_id};
-      - script.execute: draw_display
-    on_turn_on:
-      - microphone.mute:
-      - lambda: id(voice_assistant_phase) = ${voice_assist_muted_phase_id};
-      - script.execute: draw_display
-  - platform: template
-    id: timer_ringing
-    optimistic: true
-    internal: true
-    restore_mode: ALWAYS_OFF
-    on_turn_off:
-      - lambda: |-
-              id(external_media_player)
-                ->make_call()
-                .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_OFF)
-                .set_announcement(true)
-                .perform();
-              id(external_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 0);
-      - media_player.stop:
-          announcement: true
-    on_turn_on:
-      - lambda: |-
-            id(external_media_player)
-              ->make_call()
-              .set_command(media_player::MediaPlayerCommand::MEDIA_PLAYER_COMMAND_REPEAT_ONE)
-              .set_announcement(true)
-              .perform();
-            id(external_media_player)->set_playlist_delay_ms(speaker::AudioPipelineType::ANNOUNCEMENT, 1000);
-      - media_player.speaker.play_on_device_media_file:
-          media_file: timer_finished_sound
-          announcement: true
-      - delay: 15min
-      - switch.turn_off: timer_ringing
 
-  - platform: gpio
-    name: Speaker Enable
-    id: speaker_enable
-    icon: "mdi:speaker"
-    entity_category: config
-    pin: GPIO${speaker_enable_pin}
-    restore_mode: ALWAYS_ON
-
+  # LOGICO: Para apagar/encender la pantalla por la noche
   - platform: template
-    id: wake_sound
-    name: Wake sound
-    icon: "mdi:bullhorn"
-    entity_category: config
-    optimistic: true
-    restore_mode: ALWAYS_ON
-
-  - platform: template
-    id: startup_sound_switch
-    name: Startup sound
-    icon: "mdi:card-text-outline"
-    entity_category: config
-    optimistic: true
-    restore_mode: ALWAYS_ON
-
-  - platform: template
+    name: "Show Glucose Display"
     id: show_text
-    name: Show Text
     icon: "mdi:card-text-outline"
-    entity_category: config
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - script.execute: draw_display
+    on_turn_off:
+      - script.execute: draw_display
 
+  # LOGICO: Útil para ver si la SpecBall se está quedando sin batería
   - platform: template
     id: show_battery_status
-    name: Show Battery Status
-    icon: "mdi:card-text-outline"
+    name: "Show Battery Status"
+    icon: "mdi:battery"
     entity_category: config
     optimistic: true
     restore_mode: RESTORE_DEFAULT_ON
@@ -859,85 +399,41 @@ switch:
       - script.execute: draw_display
     on_turn_off:
       - script.execute: draw_display
-
-select:
+  # Para las unidades de glucosa
   - platform: template
-    entity_category: config
-    name: Wake word engine location
-    id: wake_word_engine_location
-    icon: "mdi:account-voice"
+    name: "Use mmol Units"
+    id: unit_selector
+    icon: "mdi:calculator"
     optimistic: true
-    restore_value: true
-    options:
-      - In Home Assistant
-      - On device
-    initial_option: On device
-    on_value:
-      - if:
-          condition:
-            lambda: return !id(init_in_progress);
-          then:
-            - wait_until:
-                lambda: return id(voice_assistant_phase) == ${voice_assist_muted_phase_id} || id(voice_assistant_phase) == ${voice_assist_idle_phase_id};
-            - if:
-                condition:
-                  lambda: return x == "In Home Assistant";
-                then:
-                  - micro_wake_word.stop
-                  - delay: 500ms
-                  - if:
-                      condition:
-                        switch.is_off: mute
-                      then:
-                        - lambda: id(va).set_use_wake_word(true);
-                        - voice_assistant.start_continuous:
-            - if:
-                condition:
-                  lambda: return x == "On device";
-                then:
-                  - lambda: id(va).set_use_wake_word(false);
-                  - voice_assistant.stop
-                  - delay: 500ms
-                  - if:
-                      condition:
-                        switch.is_off: mute
-                      then:
-                        - micro_wake_word.start
+    restore_mode: RESTORE_DEFAULT_OFF
+    on_turn_on:
+      - lambda: 'id(use_mmol) = true; id(s3_box_lcd).update();'
+    on_turn_off:
+      - lambda: 'id(use_mmol) = false; id(s3_box_lcd).update();'
 
 globals:
+  - id: use_mmol
+    type: bool
+    restore_value: true
+    initial_value: "false" # Set to 'true' if you prefer mmol by default
   - id: init_in_progress
     type: bool
     restore_value: false
     initial_value: "true"
-  - id: voice_assistant_phase
-    type: int
-    restore_value: false
-    initial_value: ${voice_assist_not_ready_phase_id}
-  - id: global_first_active_timer
-    type: voice_assistant::Timer
-    restore_value: false
-  - id: global_is_timer_active
-    type: bool
-    restore_value: false
-  - id: global_first_timer
-    type: voice_assistant::Timer
-    restore_value: false
-  - id: global_is_timer
-    type: bool
-    restore_value: false
   - id: last_battery_percent
     type: int
     restore_value: no
     initial_value: '-1'
-  - id: playing_internal_sound
-    type: bool
-    restore_value: no
-    initial_value: 'false'
   - id: boot_sound_played
     type: bool
     restore_value: no
     initial_value: "false"
   - id: alarm_muted
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  # Added for your Diabetes alerts logic
+  - id: glucose_alert_active
     type: bool
     restore_value: no
     initial_value: 'false'
@@ -1030,320 +526,196 @@ image:
     transparency: chroma_key
 
 font:
-  - file:
-      type: gfonts
-      family: ${font_family}
-      weight: 300
-      italic: true
-    id: font_request
-    size: 15
-    glyphsets:
-      - GF_Latin_Core
-  - file:
-      type: gfonts
-      family: ${font_family}
-      weight: 300
-    id: font_response
-    size: 15
-    glyphsets:
-      - GF_Latin_Core
-  - file:
-      type: gfonts
-      family: ${font_family}
-      weight: 300
-    id: font_battery
-    size: 24
-    glyphsets:
-      - GF_Latin_Core
-  - file:
-      type: gfonts
-      family: ${font_family}
-      weight: 300
-    id: font_timer
-    size: 30
-    glyphsets:
-      - GF_Latin_Core
-  - file:
-      type: gfonts
-      family: ${font_family}
-      weight: 700
-    id: font_dexcom
+  - file: "gfonts://Roboto"
+    id: font_glucose
     size: 60
-    glyphsets:
-      - GF_Latin_Core
+  - file: "gfonts://Roboto"
+    id: font_dexcom
+    size: 40
+  - file: "gfonts://Roboto"
+    id: font_main    # <--- This fixes the 'font_main' error
+    size: 24
+  - file: "gfonts://Roboto"
+    id: font_small   # <--- This fixes the 'font_small' error
+    size: 16
+  - file: "gfonts://Roboto"
+    id: font_timer
+    size: 12
+
 
 color:
-  - id: idle_color
-    hex: ${idle_illustration_background_color}
-  - id: listening_color
-    hex: ${listening_illustration_background_color}
-  - id: thinking_color
-    hex: ${thinking_illustration_background_color}
-  - id: replying_color
-    hex: ${replying_illustration_background_color}
-  - id: loading_color
-    hex: ${loading_illustration_background_color}
-  - id: error_color
-    hex: ${error_illustration_background_color}
-  - id: active_timer_color
-    hex: "26ed3a"
-  - id: paused_timer_color
-    hex: "3b89e3"
-
-spi:
-  - id: spi_bus
-    clk_pin: GPIO${spi_clk_pin}
-    mosi_pin: GPIO${spi_mosi_pin}
+  - id: my_red
+    hex: "FF0000"
+  - id: my_green
+    hex: "00FF00"
+  - id: my_yellow
+    hex: "FFFF00"
+  - id: my_white
+    hex: "FFFFFF"
+  - id: my_blue
+    hex: "0000FF"
+  - id: my_gray
+    hex: "888888"
+  - id: my_black   
+    hex: "000000"
 
 display:
   - platform: ili9xxx
+    model: GC9A01A
     id: s3_box_lcd
-    model: ${displaymodel}
-    invert_colors: ${invertcolors}
-    data_rate: 40MHz
+    reset_pin: GPIO${lcd_reset_pin}
     cs_pin: GPIO${lcd_cs_pin}
     dc_pin: GPIO${lcd_dc_pin}
-    reset_pin:
-      number: GPIO${lcd_reset_pin}
-    update_interval: never
+    spi_id: spi_bus
+    invert_colors: ${invertcolors}
+    data_rate: 40MHz
     dimensions:
         height: ${imageheight}
         width: ${imagewidth}
     pages:
       - id: idle_page
         lambda: |-
-          it.fill(id(idle_color));
+          // Fills background with black for better contrast
+          it.fill(id(my_black)); 
 
-          // --- 1. LOGICA DE GLUCOSA ---
-          if (id(glucose_value).has_state()) {
-            Color red = Color(255, 0, 0);
-            Color yellow = Color(255, 255, 0);
-            Color white = Color(255, 255, 255);
-            Color green = Color(0, 255, 0);
-            Color current_color = white;
+          if (id(sgv_val).has_state()) {
+            float val = id(sgv_val).state;
+            Color current_color = id(my_white);
 
-            // Determinar color de los círculos según sliders
-            if (id(glucose_value).state < id(dex_low_mmol).state) {
-              current_color = red;
-              it.circle(it.get_width() / 2, it.get_height() / 2, 112, red);
-              it.circle(it.get_width() / 2, it.get_height() / 2, 110, red);
-            } else if (id(glucose_value).state >= id(dex_max_mmol).state) {
-              current_color = red; 
-              it.circle(it.get_width() / 2, it.get_height() / 2, 112, red);
-              it.circle(it.get_width() / 2, it.get_height() / 2, 110, yellow);
-            } else if (id(glucose_value).state >= id(dex_high_mmol).state) {
-              current_color = yellow;
-              it.circle(it.get_width() / 2, it.get_height() / 2, 110, yellow);
+            // --- COLOR LOGIC (Rings) ---
+            if (val < id(glucose_low_threshold).state) {
+              current_color = id(my_red);
+            } else if (val >= id(glucose_high_threshold).state) {
+              current_color = id(my_yellow);
             } else {
-              // --- NEW GREEN CIRCLE (Between Low and High) ---
-              current_color = green;
-              it.circle(it.get_width() / 2, it.get_height() / 2, 110, green);
+              current_color = id(my_green);
             }
 
-            // Dibujar Número (Ahora dentro del bloque para reconocer 'white')
-            it.printf(it.get_width() / 2, (it.get_height() / 2) - 25, id(font_dexcom), white, TextAlign::CENTER, "%.1f", id(glucose_value).state);
+            // Draw outer range circles
+            it.circle(120, 120, 115, current_color);
+            it.circle(120, 120, 112, current_color);
 
-            // --- 2. DIBUJAR FLECHAS ---
-            int img_x = it.get_width() / 2;
-            int img_y = (it.get_height() / 2) + 45; 
-
-            if (id(glucose_trend).state == "steady") {
-              it.image(img_x, img_y, id(img_steady), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "rising_slightly") {
-              it.image(img_x, img_y, id(img_rising_slightly), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "rising") {
-              it.image(img_x, img_y, id(img_rising), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "rising_quickly") {
-              it.image(img_x, img_y, id(img_rising_quickly), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "falling_slightly") {
-              it.image(img_x, img_y, id(img_falling_slightly), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "falling") {
-              it.image(img_x, img_y, id(img_falling), ImageAlign::CENTER, current_color);
-            } else if (id(glucose_trend).state == "falling_quickly") {
-              it.image(img_x, img_y, id(img_falling_quickly), ImageAlign::CENTER, current_color);
+            // --- DRAW GLUCOSE NUMBER ---
+            if (id(use_mmol).state) {
+              it.printf(120, 95, id(font_glucose), id(my_white), TextAlign::CENTER, "%.1f", val / 18.018f);
+              it.printf(120, 145, id(font_main), current_color, TextAlign::CENTER, "mmol");
+            } else {
+              it.printf(120, 95, id(font_glucose), id(my_white), TextAlign::CENTER, "%.0f", val);
+              it.printf(120, 145, id(font_main), current_color, TextAlign::CENTER, "mg-dL");
             }
+
+            // --- DRAW TREND (Arrow Text) ---
+            it.printf(120, 180, id(font_main), id(my_white), TextAlign::CENTER, "%s", id(trend_val).state.c_str());
+
           } else {
-            // Si no hay datos (has_state es falso), muestra la casita
-            it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_idle), ImageAlign::CENTER);
+            it.printf(120, 120, id(font_main), id(my_white), TextAlign::CENTER, "Buscando...");
           }
 
-          // --- WIDGETS DE BATERÍA Y TIMER (Fuera de la lógica de glucosa) ---
+          // --- BATTERY WIDGET ---
           if (id(show_battery_status).state) {
-            const int box_top = 2;
-            const int box_height = 28;
-            it.filled_rectangle((it.get_width()/2)-40, box_top, 80, box_height, Color::WHITE);
-            it.rectangle((it.get_width()/2)-40, box_top, 80, box_height, Color::BLACK);
-            char battery_text[16];
-            snprintf(battery_text, sizeof(battery_text), "%.0f%%", id(battery_percentage).state);
-            it.printf(it.get_width() / 2, 4, id(font_battery), Color::BLACK, TextAlign::TOP_CENTER, "%s", battery_text);
+            it.printf(120, 35, id(font_small), id(my_gray), TextAlign::CENTER, "BAT: %.0f%%", id(battery_percentage).state);
           }
-          id(draw_timer_timeline).execute();
-          id(draw_active_timer_widget).execute();
-      - id: listening_page
-        lambda: |-
-          it.fill(id(listening_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_listening), ImageAlign::CENTER);
-          id(draw_timer_timeline).execute();
-      - id: thinking_page
-        lambda: |-
-          it.fill(id(thinking_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_thinking), ImageAlign::CENTER);
-          if (id(show_text).state) {
-            it.filled_rectangle(20 , 20 , 200 , 30 , Color::WHITE );
-            it.rectangle(20 , 20 , 200 , 30 , Color::BLACK );
-            it.printf(30, 25, id(font_request), Color::BLACK, "%s", id(text_request).state.c_str());
-          }
-          id(draw_timer_timeline).execute();
-      - id: replying_page
-        lambda: |-
-          it.fill(id(replying_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_replying), ImageAlign::CENTER);
-          int y_offset = 190; // default for 240px display
-          if (it.get_height() == 320) {
-            y_offset = 270; // Move box lower for 320px tall screens
-          }
-          if (id(show_text).state) {
-            it.filled_rectangle(20, y_offset, 200, 30, Color::WHITE);
-            it.rectangle(20, y_offset, 200, 30, Color::BLACK);
-            it.printf(30, y_offset + 5, id(font_response), Color::BLACK, "%s", id(text_response).state.c_str());
-          }
-          id(draw_timer_timeline).execute();
-      - id: timer_finished_page
-        lambda: |-
-          it.fill(id(idle_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_timer_finished), ImageAlign::CENTER);
-      - id: error_page
-        lambda: |-
-          it.fill(id(error_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_error), ImageAlign::CENTER);
-      - id: no_ha_page
-        lambda: |-
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(error_no_ha), ImageAlign::CENTER);
+
       - id: no_wifi_page
         lambda: |-
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(error_no_wifi), ImageAlign::CENTER);
+          it.fill(id(my_red));
+          it.printf(120, 120, id(font_main), id(my_white), TextAlign::CENTER, "SIN WIFI");
+
       - id: initializing_page
         lambda: |-
-          it.fill(id(loading_color));
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_initializing), ImageAlign::CENTER);
-      - id: muted_page
-        lambda: |-
-          it.fill(Color::BLACK);
-          it.image((it.get_width() / 2), (it.get_height() / 2), id(casita_muted), ImageAlign::CENTER);
-          id(draw_timer_timeline).execute();
-          id(draw_active_timer_widget).execute();
+          it.fill(id(my_blue));
+          it.printf(120, 120, id(font_main), id(my_white), TextAlign::CENTER, "INICIANDO...");
+          
 # 1. TEXT SENSORS (Placed at the bottom of the file)
 text_sensor:
   - platform: template
-    id: text_request
-  - platform: template
-    id: text_response
-  - platform: homeassistant
-    id: glucose_trend
-    entity_id: ${glucose_trend_entity}  # It fills in "sensor.locolucca_glucose_trend"
-    internal: true
-    on_value:
-      then:
-        - if:
-            condition:
-              lambda: 'return !id(va).is_running();'
-            then:
-              - component.update: s3_box_lcd
+    name: "Glucose Trend"
+    id: trend_val # This matches what we put in your nightscout.h
+
 number:
   - platform: template
-    name: "Glucose Low"
-    id: dex_low_mmol
-    min_value: 3.0
-    max_value: 6.0
+    name: "Umbral Bajo (Low)"
+    id: glucose_low_threshold
+    # Rango amplio para mg/dL o mmol
+    min_value: 2.0
+    max_value: 100.0
     step: 0.1
-    initial_value: 3.9
+    initial_value: 70.0
     optimistic: true
     restore_value: true
+    unit_of_measurement: "" # Se adapta visualmente
     on_value:
       then:
-        - if:
-            condition:
-              lambda: 'return !id(va).is_running();'
-            then:
-              - component.update: s3_box_lcd
+        - component.update: s3_box_lcd
 
   - platform: template
-    name: "Glucose High"
-    id: dex_high_mmol
-    min_value: 8.0
-    max_value: 12.0
-    step: 0.1
-    initial_value: 10.0
+    name: "Umbral Alto (High)"
+    id: glucose_high_threshold
+    min_value: 5.0
+    max_value: 300.0
+    step: 1.0
+    initial_value: 180.0
     optimistic: true
     restore_value: true
     on_value:
       then:
-        - if:
-            condition:
-              lambda: 'return !id(va).is_running();'
-            then:
-              - component.update: s3_box_lcd
+        - component.update: s3_box_lcd
 
   - platform: template
-    name: "Glucose Top"
-    id: dex_max_mmol
-    min_value: 12.0
-    max_value: 20.0
-    step: 0.1
-    initial_value: 15.0
+    name: "Alarma Crítica (Max)"
+    id: glucose_max_threshold
+    min_value: 10.0
+    max_value: 400.0
+    step: 1.0
+    initial_value: 250.0
     optimistic: true
     restore_value: true
     on_value:
       then:
-        - if:
-            condition:
-              lambda: 'return !id(va).is_running();'
-            then:
-              - component.update: s3_box_lcd
+        - component.update: s3_box_lcd
 
 interval:
-  - interval: 1s
+  - interval: 5s # 5 segundos es suficiente para refrescar la interfaz y ahorrar CPU
     then:
       - lambda: |-
-          static float last_low = 0;
-          static float last_high = 0;
-          static float last_top = 0;
-
-          // 1. REFRESH SCREEN IF SLIDERS MOVE
-          if (id(dex_low_mmol).state != last_low || id(dex_high_mmol).state != last_high || id(dex_max_mmol).state != last_top) {
-            last_low = id(dex_low_mmol).state;
-            last_high = id(dex_high_mmol).state;
-            last_top = id(dex_max_mmol).state;
+          // 1. REFRESH SCREEN IF SLIDERS MOVE (mg-dL o mmol)
+          static float l_low = 0, l_high = 0, l_max = 0;
+          if (id(glucose_low_threshold).state != l_low || id(glucose_high_threshold).state != l_high || id(glucose_max_threshold).state != l_max) {
+            l_low = id(glucose_low_threshold).state;
+            l_high = id(glucose_high_threshold).state;
+            l_max = id(glucose_max_threshold).state;
             id(s3_box_lcd).update();
           }
 
-          // 2. LIGHT STAR LOGIC (Visual Alerts)
-          if (id(glucose_value).has_state()) {
-            float g_val = id(glucose_value).state;
-            bool out_of_range = (g_val < id(dex_low_mmol).state || g_val >= id(dex_high_mmol).state);
+          // 2. LOGICA DE ALERTAS VISUALES (LED Ring)
+          if (id(sgv_val).has_state()) {
+            float g_val = id(sgv_val).state;
+            // Si usamos mmol en los sliders, multiplicamos por 18.018 para comparar con el SGV bruto (mg/dL)
+            float low_t = id(use_mmol) ? id(glucose_low_threshold).state * 18.018f : id(glucose_low_threshold).state;
+            float high_t = id(use_mmol) ? id(glucose_high_threshold).state * 18.018f : id(glucose_high_threshold).state;
+            float max_t = id(use_mmol) ? id(glucose_max_threshold).state * 18.018f : id(glucose_max_threshold).state;
 
-            // AUTO-RESET: Si vuelve a rango seguro, quitamos el silencio para la próxima vez
-            if (!out_of_range) {
-              id(alarm_muted) = false;
-            }
-
-            // Solo actuamos sobre el LED si NO está silenciado por el toque de pantalla
-            if (!id(alarm_muted)) {
-              auto call = id(led).make_call();
-              if (g_val < id(dex_low_mmol).state || g_val >= id(dex_max_mmol).state) {
-                // DANGER: Red Fast Pulse
-                call.set_state(true);
+            // Solo encendemos el LED si NO está el Mute activado
+            if (id(mute_alarms).state == false) {
+              auto call = id(led_rgb).make_call(); // Asegúrate que el ID del LED sea 'led_rgb'
+              
+              if (g_val < low_t || g_val >= max_t) {
+                // PELIGRO: Rojo
                 call.set_rgb(1.0, 0.0, 0.0);
-                call.set_effect("Fast Pulse");
-              } else if (g_val >= id(dex_high_mmol).state) {
-                // WARNING: Yellow Slow Pulse
-                call.set_state(true);
+                call.set_brightness(1.0);
+                call.perform();
+              } else if (g_val >= high_t) {
+                // ADVERTENCIA: Amarillo
                 call.set_rgb(1.0, 1.0, 0.0);
-                call.set_effect("Slow Pulse");
+                call.set_brightness(0.5);
+                call.perform();
               } else {
-                // SAFE: Apagar LED
+                // RANGO SEGURO: Apagar LED
                 call.set_state(false);
+                call.perform();
               }
-              call.perform();
+            } else {
+              // Si Mute está ON, apagamos el LED
+              id(led_rgb).make_call().set_state(false).perform();
             }
           }
